@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem Pakar Rekomendasi Laptop</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+            font-family: 'Poppins', sans-serif;
+        }
+        .header-bg {
+            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+            color: white;
+            padding: 2rem 0;
+            margin-bottom: 2rem;
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        .card-form {
+            border: none;
+            border-radius: 15px;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
+        }
+        .result-card {
+            transition: transform 0.2s;
+            border: none;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            margin-bottom: 1rem;
+        }
+        .result-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .price-tag {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #198754;
+        }
+        .ai-explanation {
+            background-color: #e7f1ff;
+            border-left: 4px solid #0d6efd;
+            padding: 10px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="header-bg text-center">
+        <div class="container">
+            <h1 class="fw-bold">🤖 Laptop Expert System</h1>
+            <p class="lead">Cari laptop impianmu berdasarkan kebutuhan dan budget</p>
+        </div>
+    </div>
+
+    <div class="container mb-5">
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="card card-form p-4 mb-4">
+                    <h4 class="mb-3 text-primary">🔍 Filter Pencarian</h4>
+                    <form method="POST" action="/">
+                        <div class="mb-3">
+                            <label for="budget" class="form-label fw-bold">Budget Maksimal (Rupiah)</label>
+                            <div class="input-group">
+                                <span class="input-group-text">Rp</span>
+                                <input type="number" class="form-control form-control-lg" id="budget" name="budget" 
+                                       placeholder="Contoh: 15000000" value="{{ last_budget }}" required>
+                            </div>
+                            <div class="form-text">Masukkan angka saja tanpa titik.</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="category" class="form-label fw-bold">Kategori Penggunaan</label>
+                            <select class="form-select form-select-lg" id="category" name="category" required>
+                                <option value="" disabled selected>-- Pilih Kebutuhan --</option>
+                                <option value="ADMIN_PELAJAR" {% if last_cat == 'ADMIN_PELAJAR' %}selected{% endif %}>
+                                    🎓 Pelajar / Admin Kantor (Office, Browsing)
+                                </option>
+                                <option value="PROGRAMMER_CODING" {% if last_cat == 'PROGRAMMER_CODING' %}selected{% endif %}>
+                                    💻 Programmer / Coding (CPU Kuat)
+                                </option>
+                                <option value="DESAIN_VIDEO" {% if last_cat == 'DESAIN_VIDEO' %}selected{% endif %}>
+                                    🎨 Desain Grafis & Video Editing
+                                </option>
+                                <option value="GAMING_BERAT" {% if last_cat == 'GAMING_BERAT' %}selected{% endif %}>
+                                    🎮 Gaming Berat (AAA Games)
+                                </option>
+                            </select>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">Cari Rekomendasi 🚀</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        {% if error %}
+            <div class="alert alert-danger text-center shadow-sm" role="alert">
+                <strong>Oops!</strong> {{ error }}
+            </div>
+        {% endif %}
+
+        {% if recommendations %}
+            <h3 class="mb-4 fw-bold text-center">✨ Hasil Rekomendasi Terbaik</h3>
+            <div class="row">
+                {% for laptop in recommendations %}
+                <div class="col-md-6 col-lg-4">
+                    <div class="card result-card h-100">
+                        <div class="card-header bg-transparent fw-bold text-truncate" title="{{ laptop.Nama_Produk }}">
+                            {{ laptop.Nama_Produk }}
+                        </div>
+                        <div class="card-body">
+                            <div class="text-center mb-3">
+                                <span class="badge bg-secondary">RAM {{ laptop.RAM }}GB</span>
+                                <span class="badge bg-info text-dark">CPU: {{ laptop.CpuScore|int }}</span>
+                                <span class="badge bg-warning text-dark">GPU: {{ laptop.GpuScore|int }}</span>
+                            </div>
+                            
+                            <h5 class="price-tag text-center mb-3">
+                                Rp {{ "{:,.0f}".format(laptop.Estimasi_Rupiah).replace(',', '.') }}
+                            </h5>
+                            
+                            <div class="ai-explanation">
+                                <strong>💡 Analisa AI:</strong><br>
+                                {{ laptop.Penjelasan_AI.split('Spek:')[1] if 'Spek:' in laptop.Penjelasan_AI else laptop.Penjelasan_AI }}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    </div>
+
+    <footer class="text-center py-4 text-muted">
+        <small>Dibuat dengan Python Flask & Expert System Logic</small>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
