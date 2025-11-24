@@ -3,6 +3,9 @@
 ![Python](https://img.shields.io/badge/Python-3.8%2B-blue) ![Flask](https://img.shields.io/badge/Framework-Flask-green) ![Pandas](https://img.shields.io/badge/Data-Pandas-orange) ![License](https://img.shields.io/badge/License-MIT-lightgrey)
 
 Sistem Pakar berbasis web yang dirancang untuk membantu pengguna menemukan laptop yang paling sesuai berdasarkan **Anggaran (Budget)** dan **Kategori Kebutuhan**. Sistem ini menggabungkan metode *Rule-Based Reasoning* (untuk seleksi awal) dan algoritma *Simple Additive Weighting* (SAW) untuk perankingan rekomendasi.
+<img width="2534" height="1209" alt="image" src="https://github.com/user-attachments/assets/fcf37a53-9341-4420-ac20-08a12221192c" />
+<img width="2529" height="1212" alt="image" src="https://github.com/user-attachments/assets/649aaeb1-158b-4240-903f-3dd7b5470f0c" />
+
 
 ---
 
