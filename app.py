@@ -4,8 +4,7 @@ import pandas as pd
 
 app = Flask(__name__)
 
-# Inisialisasi Sistem Pakar sekali saja saat aplikasi mulai
-# Pastikan nama file CSV sesuai dengan yang ada di folder Anda
+# Inisialisasi Sistem Pakar sekali saja
 FILENAME = "dataset_final_super_lengkap.csv"
 try:
     sistem = SistemPakarLaptop(FILENAME)
@@ -22,27 +21,32 @@ def index():
 
     if request.method == 'POST':
         try:
-            # Ambil data dari form HTML
-            # Hapus titik atau koma jika user input "15.000.000"
+            # Bersihkan input budget
             raw_budget = request.form.get('budget', '').replace('.', '').replace(',', '')
             input_budget = int(raw_budget)
             selected_cat = request.form.get('category')
 
-            # Panggil fungsi rekomendasi dari expertsystem.py
+            # Panggil logika expertsystem.py
             hasil = sistem.rekomendasi(input_budget, selected_cat)
 
-            # Cek apakah hasil berupa DataFrame valid
-            if isinstance(hasil, pd.DataFrame) and not hasil.empty:
-                # Convert DataFrame ke Dictionary agar bisa dibaca HTML
-                recommendations = hasil.to_dict('records')
-            elif isinstance(hasil, pd.DataFrame) and hasil.empty:
-                error_msg = "Tidak ditemukan laptop dengan kriteria tersebut."
+            # Logika Pengecekan Hasil dari expertsystem.py
+            if isinstance(hasil, pd.DataFrame):
+                # Cek jika expertsystem mengembalikan pesan error dalam DataFrame
+                if 'Pesan' in hasil.columns:
+                    # Ambil pesan error dari baris pertama
+                    error_msg = hasil.iloc[0]['Pesan']
+                elif not hasil.empty:
+                    # Hasil sukses -> Convert ke dictionary
+                    recommendations = hasil.to_dict('records')
+                else:
+                    error_msg = "Tidak ditemukan hasil yang sesuai."
             else:
-                # Jika return string error dari sistem pakar
-                error_msg = hasil
+                error_msg = "Terjadi kesalahan pada sistem pakar."
 
         except ValueError:
             error_msg = "Mohon masukkan angka budget yang valid."
+        except Exception as e:
+            error_msg = f"Terjadi kesalahan internal: {e}"
 
     return render_template('index.html', 
                            recommendations=recommendations, 
