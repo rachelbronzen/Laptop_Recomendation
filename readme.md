@@ -8,7 +8,7 @@ Sistem Pakar berbasis web yang dirancang untuk membantu pengguna menemukan lapto
 
 ## 📋 Daftar Isi
 1. [Fitur Utama](#-fitur-utama)
-2. [Instalasi dan Penggunaan](%EF%B8%8F-instalasi-dan-penggunaan)
+2. [Instalasi dan Penggunaan](#%EF%B8%8F-instalasi-dan-penggunaan)
 3. [Struktur Proyek](#-struktur-proyek)
 4. [Dokumentasi Sistem Pakar](#-dokumentasi-sistem-pakar)
     - [Akuisisi Pengetahuan (Knowledge Acquisition)](#1-akuisisi-pengetahuan-knowledge-acquisition)
