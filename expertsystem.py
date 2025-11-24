@@ -7,7 +7,7 @@ class SistemPakarLaptop:
         Inisialisasi Sistem Pakar.
         """
         self.file_path = file_path
-        self.KONVERSI_FACTOR = 166.9  # Convert Harga Sesuai Kurs Hari ini (0.01 USD = 166.90 IDR)
+        self.KONVERSI_FACTOR = 166.9  # Asumsi data harga dalam Cents (1 USD = ~16.690 IDR)
         self.data = self._load_and_clean_data()
         
         # RULE BASE (KNOWLEDGE BASE)
@@ -47,37 +47,49 @@ class SistemPakarLaptop:
                 'CPU_Score': 'CpuScore',
                 'GPU_Score': 'GpuScore',
                 'RAM_Clean': 'RAM',
-                'Storage_Capacity_GB': 'Storage_GB',
-                'Nama_Laptop': 'Nama_Produk'
+                'Storage': 'Storage_GB',
+                'Nama_Laptop': 'Nama_Produk',
+                'Screen_Score': 'ScreenScore', 
+                'Processor': 'TipeProcessor',     
+                'GPU': 'TipeGPU',
+                'Display': 'DetailLayar',
+                'Detail_URL': 'LinkPenjelasan',
+                'Buy_Link': 'LinkPembelian'
             }
             
             # Rename kolom
             rename_dict = {k: v for k, v in column_map.items() if k in df.columns}
             df = df.rename(columns=rename_dict)
 
-            # HAPUS DUPLIKAT: Agar tidak error dtype
+            # HAPUS DUPLIKAT
             df = df.loc[:, ~df.columns.duplicated()]
 
             # Validasi Akhir
             if 'Harga' not in df.columns:
-                print("[ERROR FATAL] Kolom 'Harga_USD' atau 'Price' tidak ditemukan di CSV!")
-                print(f"Nama kolom yang tersedia: {list(df.columns)}")
-                return pd.DataFrame()
+                if 'Price' in df.columns:
+                    df = df.rename(columns={'Price': 'Harga'})
+                else:
+                    print("[ERROR FATAL] Kolom 'Harga_USD' atau 'Price' tidak ditemukan di CSV!")
+                    return pd.DataFrame()
             
-            # Bersihkan data numerik
-            numeric_cols = ['Harga', 'CpuScore', 'GpuScore', 'RAM', 'Storage_GB']
+            # Bersihkan data numerik (ScreenScore wajib masuk sini)
+            numeric_cols = ['Harga', 'CpuScore', 'GpuScore', 'RAM', 'Storage_GB', 'ScreenScore']
+            
             for col in numeric_cols:
-                if col in df.columns:
-                    # Amankan jika masih ada duplikat dataframe
-                    if isinstance(df[col], pd.DataFrame):
-                        df[col] = df[col].iloc[:, 0]
+                # Handle jika kolom tidak ada di CSV
+                if col not in df.columns:
+                    df[col] = 0
+                    continue
 
-                    if df[col].dtype == 'object':
-                         df[col] = df[col].astype(str).str.replace(r'[^\d.]', '', regex=True)
-                    
-                    df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
+                if isinstance(df[col], pd.DataFrame):
+                    df[col] = df[col].iloc[:, 0]
 
-            print(f"[INFO] Berhasil memuat {len(df)} data laptop (Format Harga: USD/Cent).")
+                if df[col].dtype == 'object':
+                    df[col] = df[col].astype(str).str.replace(r'[^\d.]', '', regex=True)
+                
+                df[col] = pd.to_numeric(df[col], errors='coerce').fillna(0)
+
+            print(f"[INFO] Berhasil memuat {len(df)} data laptop.")
             return df
             
         except Exception as e:
@@ -85,7 +97,6 @@ class SistemPakarLaptop:
             return pd.DataFrame()
 
     def _reality_check(self, budget_idr, kategori):
-        # Validasi budget minimal (Angka dalam Rupiah)
         batas = {
             "GAMING_BERAT": 10000000,
             "DESAIN_VIDEO": 9000000,
@@ -98,31 +109,51 @@ class SistemPakarLaptop:
         return True, "Valid"
 
     def _generate_explanation(self, row, rule, kategori):
+        """
+        Menghasilkan string Explainable AI yang detail.
+        """
         reasons = []
-        # Estimasi Balik ke Rupiah untuk Penjelasan
         est_rupiah = row['Harga'] * self.KONVERSI_FACTOR
         
-        if row['CpuScore'] >= rule['min_cpu']:
-            reasons.append(f"CPU {int(row['CpuScore'])}")
-        if kategori in ["GAMING_BERAT", "DESAIN_VIDEO"] and row['GpuScore'] >= rule['min_gpu']:
-             reasons.append(f"GPU {int(row['GpuScore'])}")
+        # 1. Penjelasan CPU (Aktual vs Batas)
+        cpu_act = int(row['CpuScore'])
+        cpu_min = rule['min_cpu']
+        # Logic: Menampilkan score aktual dan batas minimumnya
+        reasons.append(f"CPU {cpu_act} (Min {cpu_min})")
+        
+        # 2. Penjelasan GPU (Aktual vs Batas)
+        gpu_act = int(row['GpuScore'])
+        gpu_min = rule['min_gpu']
+        
+        # Tampilkan detail GPU jika kategori memerlukannya atau jika GPU-nya punya score
+        if gpu_min > 0:
+            reasons.append(f"GPU {gpu_act} (Min {gpu_min})")
+        elif gpu_act > 0:
+            # Jika rule GPU min = 0, tapi laptop punya GPU dedicated, tetap tampilkan sebagai bonus
+            reasons.append(f"GPU {gpu_act}")
+
+        # 3. Penjelasan Screen Score
+        screen_act = int(row.get('ScreenScore', 0))
+        reasons.append(f"Screen {screen_act}")
+
+        # 4. RAM
         reasons.append(f"RAM {int(row['RAM'])}GB")
         
-        return f"✅ Estimasi: Rp {est_rupiah:,.0f}. Spek: {', '.join(reasons)}."
+        # Gabungkan menjadi string
+        return f"✅ Est: Rp {est_rupiah:,.0f} | Detail: {', '.join(reasons)}"
 
     def rekomendasi(self, user_budget_idr, user_kategori):
-        if self.data.empty: return "Database Kosong."
-        if user_kategori not in self.rules: return "Kategori Salah."
-        if 'Harga' not in self.data.columns: return "Kolom Harga Hilang."
-
+        if self.data.empty: return pd.DataFrame(columns=["Pesan"], data=["Database Kosong / Gagal Load."])
+        if user_kategori not in self.rules: return pd.DataFrame(columns=["Pesan"], data=["Kategori Salah."])
+        
         # Reality Check
         valid, msg = self._reality_check(user_budget_idr, user_kategori)
         if not valid: print(f"⚠️  Info: {msg}")
 
-        # Korvert Budget
-        budget_limit_usd = (user_budget_idr / self.KONVERSI_FACTOR) * 1.1 # Toleransi 10%
+        # Konversi Budget
+        budget_limit_usd = (user_budget_idr / self.KONVERSI_FACTOR) * 1.1 
         
-        # Filtering pada data
+        # Filtering Harga
         candidates = self.data[self.data['Harga'] <= budget_limit_usd].copy()
         
         if candidates.empty:
@@ -155,7 +186,6 @@ class SistemPakarLaptop:
             lambda row: self._generate_explanation(row, rule, user_kategori), axis=1
         )
         
-        # Buat kolom Estimasi Rupiah untuk ditampilkan
         candidates['Estimasi_Rupiah'] = candidates['Harga'] * self.KONVERSI_FACTOR
 
         # Sorting
@@ -163,20 +193,23 @@ class SistemPakarLaptop:
         if user_kategori == "ADMIN_PELAJAR":
             candidates = candidates.sort_values(by='Estimasi_Rupiah', ascending=True)
 
-        return candidates[['Nama_Produk', 'Estimasi_Rupiah', 'CpuScore', 'GpuScore', 'RAM', 'Penjelasan_AI']].head(10)
+        return candidates[['Nama_Produk', 'Estimasi_Rupiah', 'TipeProcessor', 'TipeGPU', 'RAM', 'Storage_GB', 'DetailLayar', 'Penjelasan_AI', 'LinkPenjelasan', 'LinkPembelian']].head(20)
 
 
 if __name__ == "__main__":
     FILENAME = "dataset_final_super_lengkap.csv" 
     sistem = SistemPakarLaptop(FILENAME)
     
-    INPUT_IDR = 2500000
+    INPUT_IDR = 6000000 
     
     print(f"\n--- REKOMENDASI UNTUK BUDGET RP {INPUT_IDR:,} ---")
     hasil = sistem.rekomendasi(INPUT_IDR, "PROGRAMMER_CODING")
     
     if isinstance(hasil, pd.DataFrame) and not hasil.empty:
-        pd.options.display.float_format = 'Rp {:,.0f}'.format
-        print(hasil.to_string(index=False))
+        # Format Rupiah spesifik kolom
+        formatters = {'Estimasi_Rupiah': 'Rp {:,.0f}'.format}
+        
+        # Tampilkan
+        print(hasil.to_string(index=False, formatters=formatters))
     else:
         print(hasil)
