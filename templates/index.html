@@ -29,6 +29,7 @@
             border: none;
             box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             margin-bottom: 1rem;
+            height: 100%;
         }
         .result-card:hover {
             transform: translateY(-5px);
@@ -44,7 +45,24 @@
             border-left: 4px solid #0d6efd;
             padding: 10px;
             border-radius: 4px;
-            font-size: 0.9rem;
+            font-size: 0.85rem;
+            margin-top: 10px;
+        }
+        .spec-item {
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+        }
+        .spec-icon {
+            width: 20px;
+            margin-right: 8px;
+            text-align: center;
+        }
+        .badge-spec {
+            font-size: 0.75rem;
+            margin-right: 3px;
+            margin-bottom: 3px;
         }
     </style>
 </head>
@@ -102,33 +120,54 @@
 
         {% if error %}
             <div class="alert alert-danger text-center shadow-sm" role="alert">
-                <strong>Oops!</strong> {{ error }}
+                <strong>Status:</strong> {{ error }}
             </div>
         {% endif %}
 
         {% if recommendations %}
             <h3 class="mb-4 fw-bold text-center">✨ Hasil Rekomendasi Terbaik</h3>
-            <div class="row">
+            <div class="row g-4">
                 {% for laptop in recommendations %}
                 <div class="col-md-6 col-lg-4">
-                    <div class="card result-card h-100">
+                    <div class="card result-card">
                         <div class="card-header bg-transparent fw-bold text-truncate" title="{{ laptop.Nama_Produk }}">
                             {{ laptop.Nama_Produk }}
                         </div>
-                        <div class="card-body">
-                            <div class="text-center mb-3">
-                                <span class="badge bg-secondary">RAM {{ laptop.RAM }}GB</span>
-                                <span class="badge bg-info text-dark">CPU: {{ laptop.CpuScore|int }}</span>
-                                <span class="badge bg-warning text-dark">GPU: {{ laptop.GpuScore|int }}</span>
+                        <div class="card-body d-flex flex-column">
+                            <div class="mb-3">
+                                <span class="badge bg-primary badge-spec">RAM {{ laptop.RAM|int }}GB</span>
+                                <span class="badge bg-success badge-spec">SSD {{ laptop.Storage_GB|int }}GB</span>
+                                <div class="mt-2 text-muted small">
+                                    <div class="spec-item" title="Processor">
+                                        🖥️ {{ laptop.TipeProcessor }}
+                                    </div>
+                                    <div class="spec-item" title="Graphic Card">
+                                        🎮 {{ laptop.TipeGPU }}
+                                    </div>
+                                    <div class="spec-item" title="Layar">
+                                        📺 {{ laptop.DetailLayar }}
+                                    </div>
+                                </div>
                             </div>
                             
-                            <h5 class="price-tag text-center mb-3">
-                                Rp {{ "{:,.0f}".format(laptop.Estimasi_Rupiah).replace(',', '.') }}
-                            </h5>
-                            
-                            <div class="ai-explanation">
-                                <strong>💡 Analisa AI:</strong><br>
-                                {{ laptop.Penjelasan_AI.split('Spek:')[1] if 'Spek:' in laptop.Penjelasan_AI else laptop.Penjelasan_AI }}
+                            <div class="mt-auto">
+                                <h5 class="price-tag text-center mb-2">
+                                    Rp {{ "{:,.0f}".format(laptop.Estimasi_Rupiah).replace(',', '.') }}
+                                </h5>
+                                
+                                <div class="ai-explanation">
+                                    <strong>💡 Analisa AI:</strong><br>
+                                    {{ laptop.Penjelasan_AI }}
+                                </div>
+
+                                <div class="d-flex gap-2 mt-3">
+                                    {% if laptop.LinkPembelian and laptop.LinkPembelian != '0' %}
+                                    <a href="{{ laptop.LinkPembelian }}" target="_blank" class="btn btn-sm btn-outline-success w-100">🛒 Beli</a>
+                                    {% endif %}
+                                    {% if laptop.LinkPenjelasan and laptop.LinkPenjelasan != '0' %}
+                                    <a href="{{ laptop.LinkPenjelasan }}" target="_blank" class="btn btn-sm btn-outline-info w-100">ℹ️ Detail</a>
+                                    {% endif %}
+                                </div>
                             </div>
                         </div>
                     </div>
