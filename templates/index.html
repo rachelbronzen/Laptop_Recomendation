@@ -3,115 +3,92 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistem Pakar Rekomendasi Laptop</title>
+    <title>Sistem Pakar: Rekomendasi Laptop</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: 'Poppins', sans-serif;
-        }
-        .header-bg {
-            background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
-            color: white;
-            padding: 2rem 0;
-            margin-bottom: 2rem;
-            border-radius: 0 0 20px 20px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
-        }
-        .card-form {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
-        }
-        .result-card {
-            transition: transform 0.2s;
-            border: none;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-            margin-bottom: 1rem;
-            height: 100%;
-        }
-        .result-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-        }
-        .price-tag {
-            font-size: 1.2rem;
-            font-weight: bold;
-            color: #198754;
-        }
-        .ai-explanation {
-            background-color: #e7f1ff;
-            border-left: 4px solid #0d6efd;
-            padding: 10px;
-            border-radius: 4px;
-            font-size: 0.85rem;
-            margin-top: 10px;
-        }
-        .spec-item {
-            font-size: 0.85rem;
-            margin-bottom: 5px;
-            display: flex;
-            align-items: center;
-        }
-        .spec-icon {
-            width: 20px;
-            margin-right: 8px;
-            text-align: center;
-        }
-        .badge-spec {
-            font-size: 0.75rem;
-            margin-right: 3px;
-            margin-bottom: 3px;
-        }
-    </style>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;500;700&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+
+    <link href="{{ url_for('static', filename='style.css') }}" rel="stylesheet">
 </head>
 <body>
 
-    <div class="header-bg text-center">
-        <div class="container">
-            <h1 class="fw-bold">🤖 Laptop Expert System</h1>
-            <p class="lead">Cari laptop impianmu berdasarkan kebutuhan dan budget</p>
+    <canvas id="canvas-bg"></canvas>
+
+    <div id="loading-overlay">
+        <div class="loader-ring"></div>
+        <div class="loading-text">PROCESSING DATA</div>
+        <div class="console-logs" id="console-logs"></div>
+    </div>
+
+    <div class="header-bg cyber-header text-center">
+        <div class="container animate__animated animate__fadeInDown">
+            <h1 class="glitch-title">LAPTOP<span style="color:var(--primary-neon)">EXPERT</span></h1>
+            <p class="subtitle">SISTEM PAKAR REKOMENDASI LAPTOP</p>
         </div>
     </div>
 
     <div class="container mb-5">
         <div class="row justify-content-center">
-            <div class="col-md-8">
-                <div class="card card-form p-4 mb-4">
-                    <h4 class="mb-3 text-primary">🔍 Filter Pencarian</h4>
-                    <form method="POST" action="/">
-                        <div class="mb-3">
-                            <label for="budget" class="form-label fw-bold">Budget Maksimal (Rupiah)</label>
+            <div class="col-lg-8">
+                <div class="glass-panel animate__animated animate__fadeInUp">
+                    <h4 class="mb-4" style="color: white; font-family:'Orbitron';"><i class="fas fa-search me-2"></i> INITIALIZE PARAMETERS</h4>
+                    
+                    <form method="POST" action="/" id="expert-form">
+                        
+                        <div class="mb-4">
+                            <label for="budget" class="form-label">MAXIMUM BUDGET (IDR)</label>
                             <div class="input-group">
-                                <span class="input-group-text">Rp</span>
-                                <input type="number" class="form-control form-control-lg" id="budget" name="budget" 
-                                       placeholder="Contoh: 15000000" value="{{ last_budget }}" required>
+                                <span class="input-group-text bg-dark border-secondary text-white">Rp</span>
+                                <input type="number" class="form-control form-control-lg cyber-input" id="budget" name="budget" 
+                                       placeholder="e.g. 15000000" value="{{ last_budget }}" required>
                             </div>
-                            <div class="form-text">Masukkan angka saja tanpa titik.</div>
+                            <div class="d-flex justify-content-between mt-1">
+                                <small class="text-muted">Min: 3 Juta</small>
+                                <small id="budget-preview" style="color: var(--primary-neon);">Rp 0</small>
+                            </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label for="category" class="form-label fw-bold">Kategori Penggunaan</label>
-                            <select class="form-select form-select-lg" id="category" name="category" required>
-                                <option value="" disabled selected>-- Pilih Kebutuhan --</option>
-                                <option value="ADMIN_PELAJAR" {% if last_cat == 'ADMIN_PELAJAR' %}selected{% endif %}>
-                                    🎓 Pelajar / Admin Kantor (Office, Browsing)
-                                </option>
-                                <option value="PROGRAMMER_CODING" {% if last_cat == 'PROGRAMMER_CODING' %}selected{% endif %}>
-                                    💻 Programmer / Coding (CPU Kuat)
-                                </option>
-                                <option value="DESAIN_VIDEO" {% if last_cat == 'DESAIN_VIDEO' %}selected{% endif %}>
-                                    🎨 Desain Grafis & Video Editing
-                                </option>
-                                <option value="GAMING_BERAT" {% if last_cat == 'GAMING_BERAT' %}selected{% endif %}>
-                                    🎮 Gaming Berat (AAA Games)
-                                </option>
+                        <div class="mb-4">
+                            <label class="form-label">USAGE PROFILE</label>
+                            
+                            <select class="form-select d-none" id="category" name="category" required>
+                                <option value="" disabled selected>Pilih Kategori</option>
+                                <option value="ADMIN_PELAJAR" {% if last_cat == 'ADMIN_PELAJAR' %}selected{% endif %}>ADMIN_PELAJAR</option>
+                                <option value="PROGRAMMER_CODING" {% if last_cat == 'PROGRAMMER_CODING' %}selected{% endif %}>PROGRAMMER_CODING</option>
+                                <option value="DESAIN_VIDEO" {% if last_cat == 'DESAIN_VIDEO' %}selected{% endif %}>DESAIN_VIDEO</option>
+                                <option value="GAMING_BERAT" {% if last_cat == 'GAMING_BERAT' %}selected{% endif %}>GAMING_BERAT</option>
                             </select>
+
+                            <div class="category-grid">
+                                <div class="cat-card" onclick="selectCategory('ADMIN_PELAJAR', this)">
+                                    <i class="fas fa-graduation-cap cat-icon text-info"></i>
+                                    <div class="fw-bold">STUDENT / OFFICE</div>
+                                    <small class="text-muted" style="font-size: 0.7em;">Basic Tasks</small>
+                                </div>
+                                <div class="cat-card" onclick="selectCategory('PROGRAMMER_CODING', this)">
+                                    <i class="fas fa-code cat-icon text-warning"></i>
+                                    <div class="fw-bold">PROGRAMMER</div>
+                                    <small class="text-muted" style="font-size: 0.7em;">High CPU Load</small>
+                                </div>
+                                <div class="cat-card" onclick="selectCategory('DESAIN_VIDEO', this)">
+                                    <i class="fas fa-pen-nib cat-icon text-danger"></i>
+                                    <div class="fw-bold">CREATOR</div>
+                                    <small class="text-muted" style="font-size: 0.7em;">Render & Design</small>
+                                </div>
+                                <div class="cat-card" onclick="selectCategory('GAMING_BERAT', this)">
+                                    <i class="fas fa-gamepad cat-icon text-success"></i>
+                                    <div class="fw-bold">GAMER (AAA)</div>
+                                    <small class="text-muted" style="font-size: 0.7em;">High GPU Load</small>
+                                </div>
+                            </div>
                         </div>
 
-                        <div class="d-grid">
-                            <button type="submit" class="btn btn-primary btn-lg">Cari Rekomendasi 🚀</button>
+                        <div class="d-grid mt-5">
+                            <button type="submit" class="btn-cyber">
+                                EXECUTE SEARCH <i class="fas fa-rocket ms-2"></i>
+                            </button>
                         </div>
                     </form>
                 </div>
@@ -119,68 +96,229 @@
         </div>
 
         {% if error %}
-            <div class="alert alert-danger text-center shadow-sm" role="alert">
-                <strong>Status:</strong> {{ error }}
+            <div class="alert alert-danger text-center shadow-lg mt-4 animate__animated animate__shakeX" 
+                 style="background: rgba(220, 53, 69, 0.2); border: 1px solid #dc3545; color: #ff8b94;">
+                <i class="fas fa-exclamation-triangle me-2"></i> <strong>SYSTEM ALERT:</strong> {{ error }}
             </div>
         {% endif %}
 
         {% if recommendations %}
-            <h3 class="mb-4 fw-bold text-center">✨ Hasil Rekomendasi Terbaik</h3>
-            <div class="row g-4">
-                {% for laptop in recommendations %}
-                <div class="col-md-6 col-lg-4">
-                    <div class="card result-card">
-                        <div class="card-header bg-transparent fw-bold text-truncate" title="{{ laptop.Nama_Produk }}">
-                            {{ laptop.Nama_Produk }}
-                        </div>
-                        <div class="card-body d-flex flex-column">
-                            <div class="mb-3">
-                                <span class="badge bg-primary badge-spec">RAM {{ laptop.RAM|int }}GB</span>
-                                <span class="badge bg-success badge-spec">SSD {{ laptop.Storage_GB|int }}GB</span>
-                                <div class="mt-2 text-muted small">
-                                    <div class="spec-item" title="Processor">
-                                        🖥️ {{ laptop.TipeProcessor }}
-                                    </div>
-                                    <div class="spec-item" title="Graphic Card">
-                                        🎮 {{ laptop.TipeGPU }}
-                                    </div>
-                                    <div class="spec-item" title="Layar">
-                                        📺 {{ laptop.DetailLayar }}
-                                    </div>
-                                </div>
+            <div class="mt-5 pt-3">
+                <h3 class="mb-4 text-center" style="font-family: 'Orbitron'; letter-spacing: 2px;">
+                    <span style="color: var(--primary-neon)">>></span> TARGETS ACQUIRED <span style="color: var(--primary-neon)"><<</span>
+                </h3>
+                
+                <div class="row g-4">
+                    {% for laptop in recommendations %}
+                    <div class="col-md-6 col-lg-4 result-container">
+                        <div class="tech-card js-tilt" data-tilt-max="5" data-tilt-glare data-tilt-max-glare="0.2">
+                            <div class="card-header-tech">
+                                <h5 class="product-name" title="{{ laptop.Nama_Produk }}">{{ laptop.Nama_Produk }}</h5>
                             </div>
-                            
-                            <div class="mt-auto">
-                                <h5 class="price-tag text-center mb-2">
-                                    Rp {{ "{:,.0f}".format(laptop.Estimasi_Rupiah).replace(',', '.') }}
-                                </h5>
-                                
-                                <div class="ai-explanation">
-                                    <strong>💡 Analisa AI:</strong><br>
-                                    {{ laptop.Penjelasan_AI }}
+                            <div class="tech-body">
+                                <div class="spec-grid">
+                                    <span class="tech-badge"><i class="fas fa-memory"></i> {{ laptop.RAM|int }}GB RAM</span>
+                                    <span class="tech-badge"><i class="fas fa-hdd"></i> {{ laptop.Storage_GB|int }}GB SSD</span>
                                 </div>
 
-                                <div class="d-flex gap-2 mt-3">
+                                <div class="mt-2 mb-3">
+                                    <div class="detail-row">
+                                        <div class="detail-icon"><i class="fas fa-microchip"></i></div>
+                                        <div>{{ laptop.TipeProcessor }}</div>
+                                    </div>
+                                    <div class="detail-row">
+                                        <div class="detail-icon"><i class="fas fa-vr-cardboard"></i></div>
+                                        <div>{{ laptop.TipeGPU }}</div>
+                                    </div>
+                                    <div class="detail-row">
+                                        <div class="detail-icon"><i class="fas fa-desktop"></i></div>
+                                        <div>{{ laptop.DetailLayar }}</div>
+                                    </div>
+                                </div>
+
+                                <div class="tech-price">
+                                    Rp {{ "{:,.0f}".format(laptop.Estimasi_Rupiah).replace(',', '.') }}
+                                </div>
+                                
+                                <div class="ai-terminal">
+                                    <i class="fas fa-terminal me-1"></i> {{ laptop.Penjelasan_AI }}
+                                </div>
+
+                                <div class="btn-action-group">
                                     {% if laptop.LinkPembelian and laptop.LinkPembelian != '0' %}
-                                    <a href="{{ laptop.LinkPembelian }}" target="_blank" class="btn btn-sm btn-outline-success w-100">🛒 Beli</a>
+                                    <a href="{{ laptop.LinkPembelian }}" target="_blank" class="btn-tech-outline">
+                                        <i class="fas fa-shopping-cart"></i> BUY
+                                    </a>
+                                    {% else %}
+                                    <a href="#" class="btn-tech-outline" style="opacity:0.5; cursor:not-allowed">N/A</a>
                                     {% endif %}
+                                    
                                     {% if laptop.LinkPenjelasan and laptop.LinkPenjelasan != '0' %}
-                                    <a href="{{ laptop.LinkPenjelasan }}" target="_blank" class="btn btn-sm btn-outline-info w-100">ℹ️ Detail</a>
+                                    <a href="{{ laptop.LinkPenjelasan }}" target="_blank" class="btn-tech-outline secondary">
+                                        <i class="fas fa-info-circle"></i> INFO
+                                    </a>
+                                    {% else %}
+                                    <a href="#" class="btn-tech-outline secondary" style="opacity:0.5; cursor:not-allowed">N/A</a>
                                     {% endif %}
                                 </div>
                             </div>
                         </div>
                     </div>
+                    {% endfor %}
                 </div>
-                {% endfor %}
             </div>
         {% endif %}
     </div>
 
-    <footer class="text-center py-4 text-muted">
-        <small>Dibuat dengan Python Flask & Expert System Logic</small>
+    <footer class="text-center py-4">
+        <small style="color: #666; font-family: 'Rajdhani';">
+        SYSTEM VERSION 1 | DEVELOPED WITH FLASK
+        </small>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vanilla-tilt/1.7.0/vanilla-tilt.min.js"></script>
+
+    <script>
+        function selectCategory(value, element) {
+            const select = document.getElementById('category');
+            select.value = value;
+
+            document.querySelectorAll('.cat-card').forEach(c => c.classList.remove('active'));
+            element.classList.add('active');
+        }
+
+        document.addEventListener("DOMContentLoaded", function() {
+            const currentVal = document.getElementById('category').value;
+            if(currentVal) {
+                const targetCard = document.querySelector(`.cat-card[onclick*="${currentVal}"]`);
+                if(targetCard) targetCard.classList.add('active');
+            }
+
+  
+            VanillaTilt.init(document.querySelectorAll(".js-tilt"), {
+                max: 10,
+                speed: 400,
+                glare: true,
+                "max-glare": 0.3,
+                scale: 1.02
+            });
+        });
+
+
+        const budgetInput = document.getElementById('budget');
+        const budgetPreview = document.getElementById('budget-preview');
+
+        budgetInput.addEventListener('input', function(e) {
+            const val = e.target.value;
+            if(val) {
+                const formatted = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', maximumFractionDigits: 0 }).format(val);
+                budgetPreview.textContent = formatted;
+            } else {
+                budgetPreview.textContent = "Rp 0";
+            }
+        });
+
+        budgetInput.dispatchEvent(new Event('input'));
+
+
+        document.getElementById('expert-form').addEventListener('submit', function(e) {
+
+            const overlay = document.getElementById('loading-overlay');
+            overlay.style.display = 'flex';
+            
+
+            const logs = document.getElementById('console-logs');
+            const messages = [
+                "Connecting to neural database...",
+                "Filtering CPU benchmarks...",
+                "Analyzing GPU throughput...",
+                "Optimizing budget constraints...",
+                "Fetching latest pricing data..."
+            ];
+            
+            let i = 0;
+            setInterval(() => {
+                if(i < messages.length) {
+                    logs.textContent = "> " + messages[i];
+                    i++;
+                }
+            }, 300);
+        });
+
+
+        const canvas = document.getElementById('canvas-bg');
+        const ctx = canvas.getContext('2d');
+        
+        let width, height;
+        let particles = [];
+        
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 1; 
+                this.vy = (Math.random() - 0.5) * 1;
+                this.size = Math.random() * 2;
+                this.color = Math.random() > 0.5 ? '#00f3ff' : '#bc13fe';
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color;
+                ctx.fill();
+            }
+        }
+
+        for (let i = 0; i < 80; i++) {
+            particles.push(new Particle());
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            
+            particles.forEach((p, index) => {
+                p.update();
+                p.draw();
+
+                for (let j = index + 1; j < particles.length; j++) {
+                    const p2 = particles[j];
+                    const dx = p.x - p2.x;
+                    const dy = p.y - p2.y;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+
+                    if (dist < 150) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `rgba(100, 100, 255, ${1 - dist / 150})`;
+                        ctx.lineWidth = 0.5;
+                        ctx.moveTo(p.x, p.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        ctx.stroke();
+                    }
+                }
+            });
+
+            requestAnimationFrame(animate);
+        }
+
+        animate();
+    </script>
 </body>
 </html>
