@@ -67,6 +67,8 @@ Laptop-Expert-System/
 ├── README.md                        # Dokumentasi Proyek
 └── templates/
     └── index.html                   # [View] Antarmuka pengguna (Bootstrap 5)
+└── static/
+    └── style.css                  # [View] Design Visual
 ```
 
 ## 🧠 Dokumentasi Sistem Pakar
