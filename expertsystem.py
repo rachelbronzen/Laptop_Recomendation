@@ -7,10 +7,10 @@ class SistemPakarLaptop:
         Inisialisasi Sistem Pakar.
         """
         self.file_path = file_path
-        self.KONVERSI_FACTOR = 166.9 
+        self.KONVERSI_FACTOR = 166.9  # Asumsi data harga dalam Cents (1 USD = ~16.690 IDR)
         self.data = self._load_and_clean_data()
         
-        # RULE BASE
+        # RULE BASE (KNOWLEDGE BASE)
         self.rules = {
             "ADMIN_PELAJAR": {
                 "min_cpu": 3000, "min_gpu": 0, "min_ram": 4,
@@ -40,6 +40,8 @@ class SistemPakarLaptop:
         """
         try:
             df = pd.read_csv(self.file_path, encoding='utf-8', low_memory=False)
+            
+            # Mapping Data
             column_map = {
                 'Harga_USD': 'Harga',     
                 'CPU_Score': 'CpuScore',
@@ -55,11 +57,14 @@ class SistemPakarLaptop:
                 'Buy_Link': 'LinkPembelian'
             }
             
+            # Rename kolom
             rename_dict = {k: v for k, v in column_map.items() if k in df.columns}
             df = df.rename(columns=rename_dict)
 
+            # HAPUS DUPLIKAT
             df = df.loc[:, ~df.columns.duplicated()]
 
+            # Validasi Akhir
             if 'Harga' not in df.columns:
                 if 'Price' in df.columns:
                     df = df.rename(columns={'Price': 'Harga'})
@@ -67,9 +72,11 @@ class SistemPakarLaptop:
                     print("[ERROR FATAL] Kolom 'Harga_USD' atau 'Price' tidak ditemukan di CSV!")
                     return pd.DataFrame()
             
+            # Bersihkan data numerik (ScreenScore wajib masuk sini)
             numeric_cols = ['Harga', 'CpuScore', 'GpuScore', 'RAM', 'Storage_GB', 'ScreenScore']
             
             for col in numeric_cols:
+                # Handle jika kolom tidak ada di CSV
                 if col not in df.columns:
                     df[col] = 0
                     continue
@@ -108,45 +115,51 @@ class SistemPakarLaptop:
         reasons = []
         est_rupiah = row['Harga'] * self.KONVERSI_FACTOR
         
-        # Penjelasan CPU
+        # 1. Penjelasan CPU (Aktual vs Batas)
         cpu_act = int(row['CpuScore'])
         cpu_min = rule['min_cpu']
+        # Logic: Menampilkan score aktual dan batas minimumnya
         reasons.append(f"CPU {cpu_act} (Min {cpu_min})")
         
-        # Penjelasan GPU
+        # 2. Penjelasan GPU (Aktual vs Batas)
         gpu_act = int(row['GpuScore'])
         gpu_min = rule['min_gpu']
         
+        # Tampilkan detail GPU jika kategori memerlukannya atau jika GPU-nya punya score
         if gpu_min > 0:
             reasons.append(f"GPU {gpu_act} (Min {gpu_min})")
         elif gpu_act > 0:
+            # Jika rule GPU min = 0, tapi laptop punya GPU dedicated, tetap tampilkan sebagai bonus
             reasons.append(f"GPU {gpu_act}")
 
-        # Penjelasan Screen Score
+        # 3. Penjelasan Screen Score
         screen_act = int(row.get('ScreenScore', 0))
         reasons.append(f"Screen {screen_act}")
 
         # 4. RAM
         reasons.append(f"RAM {int(row['RAM'])}GB")
         
-        # Gabungkan
+        # Gabungkan menjadi string
         return f"✅ Est: Rp {est_rupiah:,.0f} | Detail: {', '.join(reasons)}"
 
     def rekomendasi(self, user_budget_idr, user_kategori):
         if self.data.empty: return pd.DataFrame(columns=["Pesan"], data=["Database Kosong / Gagal Load."])
         if user_kategori not in self.rules: return pd.DataFrame(columns=["Pesan"], data=["Kategori Salah."])
         
+        # Reality Check
         valid, msg = self._reality_check(user_budget_idr, user_kategori)
         if not valid: print(f"⚠️  Info: {msg}")
 
+        # Konversi Budget
         budget_limit_usd = (user_budget_idr / self.KONVERSI_FACTOR) * 1.1 
         
+        # Filtering Harga
         candidates = self.data[self.data['Harga'] <= budget_limit_usd].copy()
         
         if candidates.empty:
             return pd.DataFrame(columns=["Pesan"], data=["Budget tidak cukup (setelah konversi)."])
 
-        # Rule Base Filtering
+        # Rule Base Filtering (Spek)
         rule = self.rules[user_kategori]
         candidates = candidates[
             (candidates['CpuScore'] >= rule['min_cpu']) &
@@ -193,9 +206,10 @@ if __name__ == "__main__":
     hasil = sistem.rekomendasi(INPUT_IDR, "PROGRAMMER_CODING")
     
     if isinstance(hasil, pd.DataFrame) and not hasil.empty:
+        # Format Rupiah spesifik kolom
         formatters = {'Estimasi_Rupiah': 'Rp {:,.0f}'.format}
         
+        # Tampilkan
         print(hasil.to_string(index=False, formatters=formatters))
     else:
         print(hasil)
-

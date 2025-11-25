@@ -4,6 +4,7 @@ import pandas as pd
 
 app = Flask(__name__)
 
+# Inisialisasi Sistem Pakar sekali saja
 FILENAME = "dataset_final_super_lengkap.csv"
 try:
     sistem = SistemPakarLaptop(FILENAME)
@@ -20,16 +21,22 @@ def index():
 
     if request.method == 'POST':
         try:
+            # Bersihkan input budget
             raw_budget = request.form.get('budget', '').replace('.', '').replace(',', '')
             input_budget = int(raw_budget)
             selected_cat = request.form.get('category')
 
+            # Panggil logika expertsystem.py
             hasil = sistem.rekomendasi(input_budget, selected_cat)
 
+            # Logika Pengecekan Hasil dari expertsystem.py
             if isinstance(hasil, pd.DataFrame):
+                # Cek jika expertsystem mengembalikan pesan error dalam DataFrame
                 if 'Pesan' in hasil.columns:
+                    # Ambil pesan error dari baris pertama
                     error_msg = hasil.iloc[0]['Pesan']
                 elif not hasil.empty:
+                    # Hasil sukses -> Convert ke dictionary
                     recommendations = hasil.to_dict('records')
                 else:
                     error_msg = "Tidak ditemukan hasil yang sesuai."
@@ -49,4 +56,3 @@ def index():
 
 if __name__ == '__main__':
     app.run(debug=True)
-
