@@ -1,10 +1,12 @@
 # 💻 Sistem Pakar Rekomendasi Laptop (Laptop Expert System)
 
-![Python](https://img.shields.io/badge/Python-3.8%2B-blue) ![Flask](https://img.shields.io/badge/Framework-Flask-green) ![Pandas](https://img.shields.io/badge/Data-Pandas-orange) ![License](https://img.shields.io/badge/License-MIT-lightgrey)
+![Python](https://img.shields.io/badge/Python-3.8%2B-blue) ![Flask](https://img.shields.io/badge/Framework-Flask-green) ![Pandas](https://img.shields.io/badge/Data-Pandas-orange)
 
 Sistem Pakar berbasis web yang dirancang untuk membantu pengguna menemukan laptop yang paling sesuai berdasarkan **Anggaran (Budget)** dan **Kategori Kebutuhan**. Sistem ini menggabungkan metode *Rule-Based Reasoning* (untuk seleksi awal) dan algoritma *Simple Additive Weighting* (SAW) untuk perankingan rekomendasi.
-<img width="2534" height="1209" alt="image" src="https://github.com/user-attachments/assets/fcf37a53-9341-4420-ac20-08a12221192c" />
-<img width="2529" height="1212" alt="image" src="https://github.com/user-attachments/assets/649aaeb1-158b-4240-903f-3dd7b5470f0c" />
+<img width="2559" height="1209" alt="image" src="https://github.com/user-attachments/assets/f8c56288-aabc-47a5-9fd0-a1395a7aca08" />
+
+<img width="2557" height="1212" alt="image" src="https://github.com/user-attachments/assets/ab768220-771a-4ba4-babf-4df185bd61ea" />
+
 
 
 ---
