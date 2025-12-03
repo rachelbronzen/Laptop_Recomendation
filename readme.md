@@ -93,32 +93,48 @@ Knowledge base direpresentasikan menggunakan struktur data *Dictionary* yang ber
 
 **Tabel Aturan (Rules):**
 
-| Kategori Pengguna | Min CPU | Min GPU | Min RAM | Bobot CPU | Bobot GPU | Bobot RAM | Prioritas |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **ADMIN / PELAJAR** | 3.000 | 0 | 4 GB | 20% | 0% | 30% | Storage & Harga Murah |
-| **PROGRAMMER** | 11.000 | 0 | 8 GB | 50% | 0% | 40% | CPU Multicore & RAM |
-| **DESAIN / VIDEO** | 15.000 | 8.000 | 16 GB | 40% | 60% | 0% | GPU & CPU Seimbang |
-| **GAMING BERAT** | 14.000 | 13.000 | 16 GB | 20% | 70% | 10% | GPU High-End |
+| Kategori Utama | Sub-Kategori (Use Case) | Min CPU | Min GPU | Min RAM | Fokus Bobot Utama (Weights) | Deskripsi Target |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| **STUDENT / OFFICE** | **General Tasks** | 9.595 | 1.230 | 8 GB | Storage (40%), RAM (30%), CPU (30%) | Kebutuhan dasar, browsing, office. |
+| | **Science / Data** | 16.225 | 3.836 | 16 GB | CPU (50%), RAM (40%) | Komputasi data (Matlab, SPSS). |
+| **PROGRAMMER** | **Web & Mobile** | 17.216 | 6.906 | 16 GB | CPU (55%), RAM (35%) | Kompilasi kode, emulator, multitasking. |
+| | **AI & ML** | 25.368 | 10.142 | 32 GB | GPU (50%), CPU (35%) | Training model, parallel computing (CUDA). |
+| **CREATOR** | **UI / UX Design** | 17.216 | 5.737 | 16 GB | GPU (45%), Screen (30%), CPU (20%) | Akurasi warna layar & rendering grafis ringan. |
+| | **Video Editor / 3D** | 25.368 | 10.142 | 32 GB | GPU (45%), CPU (30%) | Rendering berat, scrubbing timeline lancar. |
+| **GAMER** | **Casual / Indie** | 10.281 | 1.964 | 8 GB | GPU (60%), CPU (20%) | Game ringan, prioritas budget rendah. |
+| | **Esports & Stream** | 16.131 | 10.142 | 16 GB | GPU (50%), Frame/Hz (20%) | Framerate tinggi (144Hz+) & streaming. |
+| | **AAA Hardcore** | 30.562 | 17.399 | 32 GB | GPU (60%), CPU (15%) | Visual rata kanan (Ray Tracing, 4K). |
+
 
 ### 3. Mesin Inferensi (*Inference Engine*)
 Sistem menggunakan pendekatan **Forward Chaining** dengan kombinasi *Constraint Satisfaction* dan *Weighted Scoring*.
 
 **Alur Logika (`sistem.rekomendasi`):**
 
-1.  **Input:** User memasukkan `Budget (IDR)` dan `Kategori`.
+1.  **Input:**
+    Sistem menerima parameter input dari antarmuka:
+    * `Budget (IDR)`
+    * `Main Category` & `Specific Use Case` (Sub-kategori)
+    * `Brand Filter` & `Keyword Search` (Opsional)
 2.  **Reality Check (Validasi Awal):**
-    Sistem memeriksa batas minimal budget untuk kategori tertentu.
-    * *Rule:* Jika `Kategori == GAMING` dan `Budget < 10 Juta`, maka tolak permintaan.
+    Sistem memverifikasi kelayakan budget terhadap kategori yang dipilih untuk mencegah ekspektasi yang tidak realistis sebelum pencarian dilakukan.
+    * **Rule Gaming:** Min. **Rp 8.000.000** (Indie/Esport) atau **Rp 15.000.000** (AAA).
+    * **Rule Creator:** Min. **Rp 7.000.000**.
+    * **Rule Programmer:** Min. **Rp 4.000.000**.
+    * *Action:* Jika `Budget < Threshold`, sistem mengembalikan pesan error spesifik dan menghentikan proses.
 3.  **Konversi Mata Uang:**
     Budget IDR dikonversi ke USD (Faktor: 16.690) untuk pencocokan dengan dataset.
 4.  **Filtering Tahap 1 (Hard Constraints):**
     Seleksi laptop dimana:
     * `Harga Laptop <= Budget User`
-    * `CPU Laptop >= Min CPU Kategori`
-    * `GPU Laptop >= Min GPU Kategori`
-    * `RAM Laptop >= Min RAM Kategori`
+    * `CPU Score >= Min CPU`
+    * `GPU Score >= Min GPU`
+    * `RAM Capacity >= Min RAM`
+    * `Screen Score >= Min Screen`
+    * `Refresh Rate >= Min Frame` (Khusus Gaming/Creator)
 5.  **Ranking Tahap 2 (SAW Algorithm):**
     Laptop yang lolos dihitung skor preferensinya:
+
 
     $$V = \left(\frac{CPU}{MaxCPU} \times w_{cpu}\right) + \left(\frac{GPU}{MaxGPU} \times w_{gpu}\right) + \left(\frac{RAM}{MaxRAM} \times w_{ram}\right)$$
 
