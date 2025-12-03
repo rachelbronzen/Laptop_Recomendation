@@ -28,18 +28,25 @@ Sistem Pakar berbasis web yang dirancang untuk membantu pengguna menemukan lapto
 * **Pencarian Cerdas:** Memfilter laptop berdasarkan budget Rupiah (dikonversi otomatis dari USD).
 * **Segmentasi Pengguna:** 4 Kategori peran (Pelajar, Programmer, Desainer, Gamer) dengan aturan spesifikasi yang berbeda.
 * **Validasi Realitas:** Mencegah pencarian yang tidak realistis (contoh: mencari laptop gaming berat dengan budget 2 juta).
-* **Sistem Ranking (SAW):** Mengurutkan hasil rekomendasi berdasarkan bobot prioritas (CPU vs GPU vs RAM).
+* **Sistem Ranking (SAW):** Mengurutkan hasil rekomendasi berdasarkan bobot prioritas (CPU vs GPU vs RAM Storage vs Kualitas Layar (Screen) vs Refresh Rate (Hz)).
 * **Explainable AI:** Memberikan alasan transparan mengapa laptop tersebut direkomendasikan (misal: "Lolos karena CPU score 15.000 > Min 11.000").
-
+* **Smart Search & Brand Filter:** Fitur pencarian teks bebas dan filter merek (HP, Lenovo, ASUS, dll).
+* **Automated Data Pipeline:** Menggunakan script Selenium terintegrasi untuk memperoleh data spesifikasi laptop dan skor benchmark secara otomatis.
+* **Advanced Sorting:** Pengurutan berdasarkan *Best Value* (Skor Performa per Rupiah), *Lowest Price*, dan *Highest Score*.
 ---
 
 ## 🛠️ Instalasi dan Penggunaan
 
-### Prasyarat
+### Cara 1: Akses Langsung (Cloud)
+Sistem dapat diakses tanpa instalasi melalui link berikut:  
+**[https://lres-v2repo.vercel.app/](https://lres-v2repo.vercel.app/)**
+
+### Cara 2: Jalankan Pada Lokal
+**Prasyarat**
 * Python 3.x
 * Pip (Python Package Installer)
 
-### Langkah-langkah
+**Langkah-langkah** 
 1.  **Clone atau Download** repository ini.
 2.  **Install Library** yang dibutuhkan:
     ```bash
