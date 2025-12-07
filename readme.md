@@ -73,7 +73,7 @@ Sistem dapat diakses tanpa instalasi melalui link berikut:
 Laptop-Expert-System/
 │
 ├── dataset_final_super_lengkap.csv  # [Knowledge Source] Data spesifikasi laptop
-├──masterscrapeselenium.py           # [Acquisition] Script Automated Knowledge Extraction
+├──masterscrapselenium.py           # [Acquisition] Script Automated Knowledge Extraction
 ├──expertsystem.py                  # [Logic] Core sistem pakar, Rules, & Algoritma SAW
 ├── app.py                           # [Controller] Web Server Flask
 ├── README.md                        # Dokumentasi Proyek
