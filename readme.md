@@ -48,17 +48,21 @@ Sistem dapat diakses tanpa instalasi melalui link berikut:
 
 **Langkah-langkah** 
 1.  **Clone atau Download** repository ini.
-2.  **Install Library** yang dibutuhkan:
     ```bash
-    pip install flask pandas numpy
+    git clone https://github.com/hansits034/lres-v2_repo.git
+    cd Laptop-Expert-System
     ```
-3.  **Pastikan Dataset Tersedia**:
+3.  **Install Library** yang dibutuhkan:
+    ```bash
+    pip install flask pandas numpy selenium beautifulsoup4 webdriver-manager
+    ```
+4.  **Pastikan Dataset Tersedia**:
     File `dataset_final_super_lengkap.csv` harus berada di dalam folder root proyek.
-4.  **Jalankan Aplikasi**:
+5.  **Jalankan Aplikasi**:
     ```bash
     python app.py
     ```
-5.  **Akses Web**:
+6.  **Akses Web**:
     Buka browser dan kunjungi `http://127.0.0.1:5000/`
 
 ---
@@ -69,7 +73,8 @@ Sistem dapat diakses tanpa instalasi melalui link berikut:
 Laptop-Expert-System/
 │
 ├── dataset_final_super_lengkap.csv  # [Knowledge Source] Data spesifikasi laptop
-├── expertsystem.py                  # [Logic] Core sistem pakar, Rules, & Algoritma SAW
+├──masterscrapeselenium.py           # [Acquisition] Script Automated Knowledge Extraction
+├──expertsystem.py                  # [Logic] Core sistem pakar, Rules, & Algoritma SAW
 ├── app.py                           # [Controller] Web Server Flask
 ├── README.md                        # Dokumentasi Proyek
 └── templates/
@@ -87,6 +92,7 @@ Pengetahuan sistem ini dibangun dari dua sumber utama:
 * **Data Faktual (Dataset):** Menggunakan data CSV yang berisi ribuan laptop dengan atribut: `Harga_USD`, `CPU_Score`, `GPU_Score`, `RAM`, dan `Storage`.
 * **Data Heuristik (Pakar):** Aturan-aturan yang ditanamkan (*hard-coded*) berdasarkan pengetahuan umum tentang kebutuhan hardware untuk profesi tertentu.
 * **Preprocessing:** Data dibersihkan menggunakan Pandas, menghapus karakter non-numerik, dan mengisi nilai kosong (NULL) dengan 0.
+* **Automated Knowledge Extraction:** Menggunakan bot crawler yang dapat dilihat pada `masterscrapselenium.py`. Pada file tersebut telah diterapkan algoritma Human-Like Behavior dalam proses pengumpulan data spesifikasi secara real-time menggunakan distribusi probabilitas Gaussian pada jeda waktu request, sehingga aktivitas bot terlihat natural seperti perilaku browsing manusia biasa. Setelah itu, data yang terkumpul akan disatukan kembali dengan data benchmark eksternal (CPU/GPU Benchmark).
 
 ### 2. Basis Pengetahuan (*Knowledge Base*)
 Knowledge base direpresentasikan menggunakan struktur data *Dictionary* yang berisi aturan *If-Then* untuk setiap kategori.
@@ -107,7 +113,7 @@ Knowledge base direpresentasikan menggunakan struktur data *Dictionary* yang ber
 
 
 ### 3. Mesin Inferensi (*Inference Engine*)
-Sistem menggunakan pendekatan **Forward Chaining** dengan kombinasi *Constraint Satisfaction* dan *Weighted Scoring*.
+Sistem menggunakan pendekatan Hybrid: **Forward Chaining** untuk alur data, **Constraint Satisfaction Problem (CSP)** untuk eliminasi laptop yang tidak memenuhi syarat (Hard Constraints), dan **Simple Additive Weighting (SAW)** untuk perankingan (Soft Constraints).
 
 **Alur Logika (`sistem.rekomendasi`):**
 
